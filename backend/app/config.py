@@ -10,5 +10,9 @@ class Settings(BaseSettings):
 
     model_config = {"env_file": ".env"}
 
+    @property
+    def is_postgres(self) -> bool:
+        return self.database_url.startswith(("postgresql://", "postgres://"))
+
 
 settings = Settings()
