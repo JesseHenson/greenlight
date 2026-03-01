@@ -6,7 +6,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from app.database import get_session
 from app.main import app
 from app.models.user import User
-from app.models.group import ParentGroup, ParentGroupMember, GroupRole
+from app.models.group import Team, TeamMember, GroupRole
 
 
 @pytest.fixture(name="engine")
@@ -26,35 +26,35 @@ def session_fixture(engine):
         yield session
 
 
-@pytest.fixture(name="parent_a")
-def parent_a_fixture(session):
-    user = User(name="Parent A", email="a@test.com", clerk_id="clerk_a")
+@pytest.fixture(name="user_a")
+def user_a_fixture(session):
+    user = User(name="Alex", email="a@test.com", clerk_id="clerk_a")
     session.add(user)
     session.commit()
     session.refresh(user)
     return user
 
 
-@pytest.fixture(name="parent_b")
-def parent_b_fixture(session):
-    user = User(name="Parent B", email="b@test.com", clerk_id="clerk_b")
+@pytest.fixture(name="user_b")
+def user_b_fixture(session):
+    user = User(name="Jordan", email="b@test.com", clerk_id="clerk_b")
     session.add(user)
     session.commit()
     session.refresh(user)
     return user
 
 
-@pytest.fixture(name="group_with_parents")
-def group_with_parents_fixture(session, parent_a, parent_b):
-    group = ParentGroup(name="Test Family")
-    session.add(group)
+@pytest.fixture(name="team_with_members")
+def team_with_members_fixture(session, user_a, user_b):
+    team = Team(name="Test Team")
+    session.add(team)
     session.commit()
-    session.refresh(group)
+    session.refresh(team)
 
-    session.add(ParentGroupMember(group_id=group.id, user_id=parent_a.id, role=GroupRole.owner))
-    session.add(ParentGroupMember(group_id=group.id, user_id=parent_b.id, role=GroupRole.member))
+    session.add(TeamMember(group_id=team.id, user_id=user_a.id, role=GroupRole.owner))
+    session.add(TeamMember(group_id=team.id, user_id=user_b.id, role=GroupRole.member))
     session.commit()
-    return group
+    return team
 
 
 @pytest.fixture(autouse=True)
@@ -83,16 +83,16 @@ def setup_app(session, monkeypatch):
 
 
 @pytest.fixture(name="client_a")
-def client_a_fixture(parent_a):
-    """TestClient authenticated as Parent A."""
+def client_a_fixture(user_a):
+    """TestClient authenticated as User A."""
     client = TestClient(app)
-    client.headers["Authorization"] = f"Bearer {parent_a.clerk_id}"
+    client.headers["Authorization"] = f"Bearer {user_a.clerk_id}"
     return client
 
 
 @pytest.fixture(name="client_b")
-def client_b_fixture(parent_b):
-    """TestClient authenticated as Parent B."""
+def client_b_fixture(user_b):
+    """TestClient authenticated as User B."""
     client = TestClient(app)
-    client.headers["Authorization"] = f"Bearer {parent_b.clerk_id}"
+    client.headers["Authorization"] = f"Bearer {user_b.clerk_id}"
     return client

@@ -1,71 +1,71 @@
-def test_create_problem(client_a, group_with_parents):
-    resp = client_a.post("/api/problems", json={
-        "title": "Bedtime Schedule",
-        "description": "Need to agree on consistent bedtime",
-        "group_id": group_with_parents.id,
+def test_create_challenge(client_a, team_with_members):
+    resp = client_a.post("/api/challenges", json={
+        "title": "Reduce meeting fatigue",
+        "description": "Need creative approaches to reduce meetings",
+        "group_id": team_with_members.id,
     })
     assert resp.status_code == 200
     data = resp.json()
-    assert data["title"] == "Bedtime Schedule"
-    assert data["session_status"] == "brainstorming"
+    assert data["title"] == "Reduce meeting fatigue"
+    assert data["session_status"] == "ideate"
 
 
-def test_list_problems(client_a, group_with_parents):
-    client_a.post("/api/problems", json={
-        "title": "Problem 1",
+def test_list_challenges(client_a, team_with_members):
+    client_a.post("/api/challenges", json={
+        "title": "Challenge 1",
         "description": "Desc 1",
-        "group_id": group_with_parents.id,
+        "group_id": team_with_members.id,
     })
-    resp = client_a.get("/api/problems")
+    resp = client_a.get("/api/challenges")
     assert resp.status_code == 200
     assert len(resp.json()) == 1
 
 
-def test_get_problem(client_a, group_with_parents):
-    create = client_a.post("/api/problems", json={
-        "title": "Homework Routine",
-        "description": "Need structure",
-        "group_id": group_with_parents.id,
+def test_get_challenge(client_a, team_with_members):
+    create = client_a.post("/api/challenges", json={
+        "title": "Onboarding redesign",
+        "description": "Need better onboarding",
+        "group_id": team_with_members.id,
     })
-    pid = create.json()["id"]
-    resp = client_a.get(f"/api/problems/{pid}")
+    cid = create.json()["id"]
+    resp = client_a.get(f"/api/challenges/{cid}")
     assert resp.status_code == 200
-    assert resp.json()["title"] == "Homework Routine"
+    assert resp.json()["title"] == "Onboarding redesign"
 
 
-def test_update_problem(client_a, group_with_parents):
-    create = client_a.post("/api/problems", json={
+def test_update_challenge(client_a, team_with_members):
+    create = client_a.post("/api/challenges", json={
         "title": "Original",
         "description": "Desc",
-        "group_id": group_with_parents.id,
+        "group_id": team_with_members.id,
     })
-    pid = create.json()["id"]
-    resp = client_a.patch(f"/api/problems/{pid}", json={"title": "Updated"})
+    cid = create.json()["id"]
+    resp = client_a.patch(f"/api/challenges/{cid}", json={"title": "Updated"})
     assert resp.status_code == 200
     assert resp.json()["title"] == "Updated"
 
 
-def test_collaborator_can_view(client_a, client_b, group_with_parents):
-    """Parent B (group member) should see problems created by Parent A."""
-    create = client_a.post("/api/problems", json={
-        "title": "Shared Problem",
+def test_collaborator_can_view(client_a, client_b, team_with_members):
+    """User B (team member) should see challenges created by User A."""
+    create = client_a.post("/api/challenges", json={
+        "title": "Shared Challenge",
         "description": "Both should see",
-        "group_id": group_with_parents.id,
+        "group_id": team_with_members.id,
     })
-    pid = create.json()["id"]
+    cid = create.json()["id"]
 
-    resp = client_b.get(f"/api/problems/{pid}")
+    resp = client_b.get(f"/api/challenges/{cid}")
     assert resp.status_code == 200
-    assert resp.json()["title"] == "Shared Problem"
+    assert resp.json()["title"] == "Shared Challenge"
 
 
 def test_non_collaborator_blocked(client_a, client_b):
-    """Without a group, Parent B should NOT access Parent A's problem."""
-    create = client_a.post("/api/problems", json={
+    """Without a team, User B should NOT access User A's challenge."""
+    create = client_a.post("/api/challenges", json={
         "title": "Private",
         "description": "Only A",
     })
-    pid = create.json()["id"]
+    cid = create.json()["id"]
 
-    resp = client_b.get(f"/api/problems/{pid}")
+    resp = client_b.get(f"/api/challenges/{cid}")
     assert resp.status_code == 403

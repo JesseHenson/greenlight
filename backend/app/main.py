@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.database import create_db_and_tables
-from app.routers import auth, problems, ideas, sessions, ai, analysis, comments, drafts, groups
+from app.routers import auth, challenges, ideas, sessions, ai, analysis, comments, drafts, teams
 
 
 @asynccontextmanager
@@ -17,25 +17,25 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="CommonGround", lifespan=lifespan)
+app = FastAPI(title="Greenlight", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:8080"],
+    allow_origins=["http://localhost:5173", "http://localhost:5175", "http://localhost:8080"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(auth.router)
-app.include_router(problems.router)
+app.include_router(challenges.router)
 app.include_router(ideas.router)
 app.include_router(sessions.router)
 app.include_router(ai.router)
 app.include_router(analysis.router)
 app.include_router(comments.router)
 app.include_router(drafts.router)
-app.include_router(groups.router)
+app.include_router(teams.router)
 
 
 @app.get("/api/health")

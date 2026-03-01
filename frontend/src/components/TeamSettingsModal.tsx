@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../api/client';
-import type { ParentGroup } from '../types';
+import type { Team } from '../types';
 
 interface PendingInvite {
   id: number;
@@ -9,13 +9,13 @@ interface PendingInvite {
 }
 
 interface Props {
-  group: ParentGroup;
+  team: Team;
   onClose: () => void;
-  onGroupUpdated: (group: ParentGroup) => void;
+  onTeamUpdated: (team: Team) => void;
 }
 
-export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: Props) {
-  const [groupName, setGroupName] = useState(group.name);
+export default function TeamSettingsModal({ team, onClose, onTeamUpdated }: Props) {
+  const [teamName, setTeamName] = useState(team.name);
   const [inviteEmail, setInviteEmail] = useState('');
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,7 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
 
   const fetchPendingInvites = async () => {
     try {
-      const res = await api.get(`/groups/${group.id}/pending-invites`);
+      const res = await api.get(`/teams/${team.id}/pending-invites`);
       setPendingInvites(res.data);
     } catch {
       // ignore
@@ -40,8 +40,8 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
     setLoading(true);
     setError('');
     try {
-      await api.patch(`/groups/${group.id}`, { name: groupName });
-      onGroupUpdated({ ...group, name: groupName });
+      await api.patch(`/teams/${team.id}`, { name: teamName });
+      onTeamUpdated({ ...team, name: teamName });
       setEditingName(false);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to update');
@@ -56,12 +56,12 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
     setError('');
     setMessage('');
     try {
-      const res = await api.post(`/groups/${group.id}/invite`, { email: inviteEmail });
+      const res = await api.post(`/teams/${team.id}/invite`, { email: inviteEmail });
       setMessage(res.data.message);
       setInviteEmail('');
       if (res.data.status === 'added') {
-        const groupRes = await api.get(`/groups/${group.id}`);
-        onGroupUpdated(groupRes.data);
+        const teamRes = await api.get(`/teams/${team.id}`);
+        onTeamUpdated(teamRes.data);
       } else {
         fetchPendingInvites();
       }
@@ -74,7 +74,7 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
 
   const handleCancelInvite = async (inviteId: number) => {
     try {
-      await api.delete(`/groups/${group.id}/pending-invites/${inviteId}`);
+      await api.delete(`/teams/${team.id}/pending-invites/${inviteId}`);
       fetchPendingInvites();
     } catch {
       // ignore
@@ -82,47 +82,47 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl border border-slate-200/60 max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Group Settings</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <h2 className="text-lg font-semibold text-slate-900">Team Settings</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl leading-none transition-colors">&times;</button>
         </div>
 
-        {error && <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm mb-4">{error}</div>}
-        {message && <div className="bg-green-50 text-green-700 p-3 rounded-lg text-sm mb-4">{message}</div>}
+        {error && <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm mb-4">{error}</div>}
+        {message && <div className="bg-emerald-50 text-emerald-700 p-3 rounded-md text-sm mb-4">{message}</div>}
 
-        {/* Group Name */}
+        {/* Team Name */}
         <div className="mb-6">
-          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Group Name</label>
+          <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Team Name</label>
           {editingName ? (
             <div className="flex gap-2">
               <input
                 type="text"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                className="flex-1 px-3 py-1.5 border border-slate-300 rounded-md text-sm shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               />
               <button
                 onClick={handleUpdateName}
                 disabled={loading}
-                className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50"
+                className="px-3 py-1.5 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700 disabled:opacity-50 shadow-sm transition-colors"
               >
                 Save
               </button>
               <button
-                onClick={() => { setEditingName(false); setGroupName(group.name); }}
-                className="px-3 py-1.5 text-gray-600 bg-gray-100 rounded-lg text-sm hover:bg-gray-200"
+                onClick={() => { setEditingName(false); setTeamName(team.name); }}
+                className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md text-sm hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-900">{group.name || 'Unnamed group'}</span>
+              <span className="text-sm text-slate-900">{team.name || 'Unnamed team'}</span>
               <button
                 onClick={() => setEditingName(true)}
-                className="text-xs text-indigo-600 hover:text-indigo-700"
+                className="text-xs text-emerald-600 hover:text-emerald-700 transition-colors"
               >
                 Edit
               </button>
@@ -132,18 +132,18 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
 
         {/* Members */}
         <div className="mb-6">
-          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Members</label>
+          <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Members</label>
           <div className="space-y-2">
-            {group.members.map((m) => (
-              <div key={m.user_id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-medium text-indigo-700">
+            {team.members.map((m) => (
+              <div key={m.user_id} className="flex items-center gap-3 p-2 bg-slate-50 rounded-md">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-medium text-emerald-700">
                   {m.user_name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900 truncate">{m.user_name}</div>
-                  <div className="text-xs text-gray-500 truncate">{m.email}</div>
+                  <div className="text-sm font-medium text-slate-900 truncate">{m.user_name}</div>
+                  <div className="text-xs text-slate-500 truncate">{m.email}</div>
                 </div>
-                <span className="text-xs text-gray-400 capitalize">{m.role}</span>
+                <span className="text-xs text-slate-400 capitalize">{m.role}</span>
               </div>
             ))}
           </div>
@@ -152,20 +152,20 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
         {/* Pending Invites */}
         {pendingInvites.length > 0 && (
           <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Pending Invites</label>
+            <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Pending Invites</label>
             <div className="space-y-2">
               {pendingInvites.map((inv) => (
-                <div key={inv.id} className="flex items-center gap-3 p-2 bg-amber-50 rounded-lg">
+                <div key={inv.id} className="flex items-center gap-3 p-2 bg-amber-50 rounded-md">
                   <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-sm text-amber-700">
                     ?
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-gray-900 truncate">{inv.email}</div>
-                    <div className="text-xs text-gray-500">Invite sent</div>
+                    <div className="text-sm text-slate-900 truncate">{inv.email}</div>
+                    <div className="text-xs text-slate-500">Invite sent</div>
                   </div>
                   <button
                     onClick={() => handleCancelInvite(inv.id)}
-                    className="text-xs text-red-500 hover:text-red-700"
+                    className="text-xs text-red-500 hover:text-red-700 transition-colors"
                   >
                     Cancel
                   </button>
@@ -177,7 +177,7 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
 
         {/* Invite Form */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Invite Co-Parent</label>
+          <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Invite Teammate</label>
           <form onSubmit={handleInvite} className="flex gap-2">
             <input
               type="email"
@@ -185,12 +185,12 @@ export default function GroupSettingsModal({ group, onClose, onGroupUpdated }: P
               onChange={(e) => setInviteEmail(e.target.value)}
               required
               placeholder="email@example.com"
-              className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-1 px-3 py-1.5 border border-slate-300 rounded-md text-sm shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
             />
             <button
               type="submit"
               disabled={loading}
-              className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50"
+              className="px-3 py-1.5 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700 disabled:opacity-50 shadow-sm transition-colors"
             >
               {loading ? 'Sending...' : 'Invite'}
             </button>

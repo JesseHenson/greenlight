@@ -3,27 +3,27 @@ import json
 from app.ai.client import anthropic_client
 
 
-PROS_CONS_PROMPT = """Analyze this co-parenting idea from multiple perspectives.
+PROS_CONS_PROMPT = """Analyze this idea from multiple stakeholder perspectives.
 
-Problem context: {problem_context}
+Challenge context: {challenge_context}
 Idea: {idea_content}
 
 Provide a pros and cons analysis considering:
-- Impact on the children
-- Impact on Parent A
-- Impact on Parent B
+- Impact on the team and organization
+- Impact on end users or customers
+- Impact on key stakeholders
 - Long-term sustainability
 
 Respond with ONLY valid JSON (no markdown, no code blocks):
 {{
   "pros": ["pro 1", "pro 2", "pro 3"],
   "cons": ["con 1", "con 2", "con 3"],
-  "children_impact": "brief assessment of impact on children"
+  "stakeholder_impact": "brief assessment of impact on key stakeholders"
 }}"""
 
-FEASIBILITY_PROMPT = """Assess the feasibility of this co-parenting idea.
+FEASIBILITY_PROMPT = """Assess the feasibility of this idea.
 
-Problem context: {problem_context}
+Challenge context: {challenge_context}
 Idea: {idea_content}
 
 Evaluate on these dimensions and respond with ONLY valid JSON (no markdown, no code blocks):
@@ -32,37 +32,37 @@ Evaluate on these dimensions and respond with ONLY valid JSON (no markdown, no c
   "logistics": "assessment of practical logistics",
   "cost": "assessment of financial impact",
   "time": "assessment of time requirements",
-  "complexity": "assessment of coordination complexity",
+  "complexity": "assessment of implementation complexity",
   "summary": "one-line feasibility summary"
 }}
 
 Score from 1 (very difficult) to 10 (very easy to implement)."""
 
-FAIRNESS_PROMPT = """Assess the fairness of this co-parenting idea for both parents.
+IMPACT_PROMPT = """Assess the potential impact of this idea on all stakeholders.
 
-Problem context: {problem_context}
+Challenge context: {challenge_context}
 Idea: {idea_content}
 
-Evaluate how this idea impacts each parent and respond with ONLY valid JSON (no markdown, no code blocks):
+Evaluate how this idea impacts different stakeholders and respond with ONLY valid JSON (no markdown, no code blocks):
 {{
   "score": 7,
-  "parent_a_impact": "how this affects the parent who proposed the problem",
-  "parent_b_impact": "how this affects the co-parent",
-  "balance_assessment": "overall fairness assessment",
-  "potential_resentment": "any areas that might cause resentment if not addressed"
+  "team_impact": "how this affects the team implementing it",
+  "user_impact": "how this affects end users or customers",
+  "balance_assessment": "overall impact assessment across stakeholders",
+  "risks": "any risks or unintended consequences to watch for"
 }}
 
-Score from 1 (very unfair) to 10 (perfectly balanced)."""
+Score from 1 (very low impact) to 10 (transformative impact)."""
 
 
-async def analyze_idea(idea_content: str, problem_context: str, analysis_type: str) -> str:
+async def analyze_idea(idea_content: str, challenge_context: str, analysis_type: str) -> str:
     prompts = {
         "pros_cons": PROS_CONS_PROMPT,
         "feasibility": FEASIBILITY_PROMPT,
-        "fairness": FAIRNESS_PROMPT,
+        "impact": IMPACT_PROMPT,
     }
     prompt = prompts[analysis_type].format(
-        problem_context=problem_context, idea_content=idea_content
+        challenge_context=challenge_context, idea_content=idea_content
     )
 
     response = await anthropic_client.messages.create(

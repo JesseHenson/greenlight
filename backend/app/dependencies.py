@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 
 from app.database import get_session
 from app.models.user import User
-from app.models.group import PendingGroupInvite, ParentGroupMember, GroupRole
+from app.models.group import PendingTeamInvite, TeamMember, GroupRole
 from app.services.clerk_auth import verify_clerk_token, get_clerk_user_info
 
 logger = logging.getLogger(__name__)
@@ -71,27 +71,27 @@ def get_current_user(
     session.commit()
     session.refresh(user)
 
-    # Fulfill any pending group invites for this email
+    # Fulfill any pending team invites for this email
     _fulfill_pending_invites(session, user)
 
     return user
 
 
 def _fulfill_pending_invites(session: Session, user: User):
-    """Auto-join groups where this user's email was invited."""
+    """Auto-join teams where this user's email was invited."""
     pending = session.exec(
-        select(PendingGroupInvite).where(PendingGroupInvite.email == user.email)
+        select(PendingTeamInvite).where(PendingTeamInvite.email == user.email)
     ).all()
     for invite in pending:
         # Check not already a member
         existing = session.exec(
-            select(ParentGroupMember).where(
-                ParentGroupMember.group_id == invite.group_id,
-                ParentGroupMember.user_id == user.id,
+            select(TeamMember).where(
+                TeamMember.group_id == invite.group_id,
+                TeamMember.user_id == user.id,
             )
         ).first()
         if not existing:
-            session.add(ParentGroupMember(
+            session.add(TeamMember(
                 group_id=invite.group_id,
                 user_id=user.id,
                 role=GroupRole.member,
@@ -99,7 +99,7 @@ def _fulfill_pending_invites(session: Session, user: User):
         session.delete(invite)
     if pending:
         session.commit()
-        logger.info("Fulfilled %d pending group invite(s) for %s", len(pending), user.email)
+        logger.info("Fulfilled %d pending team invite(s) for %s", len(pending), user.email)
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

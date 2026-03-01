@@ -7,14 +7,14 @@ from sqlmodel import Field, SQLModel
 class AnalysisType(str, Enum):
     pros_cons = "pros_cons"
     feasibility = "feasibility"
-    fairness = "fairness"
+    impact = "impact"
     summary = "summary"
 
 
 class Analysis(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    brainstorm_idea_id: int | None = Field(default=None, foreign_key="brainstormidea.id")
-    problem_id: int | None = Field(default=None, foreign_key="problem.id")
+    idea_id: int | None = Field(default=None, foreign_key="idea.id")
+    challenge_id: int | None = Field(default=None, foreign_key="challenge.id")
     analysis_type: AnalysisType
     content: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -22,8 +22,8 @@ class Analysis(SQLModel, table=True):
 
 class AnalysisRead(SQLModel):
     id: int
-    brainstorm_idea_id: int | None
-    problem_id: int | None
+    idea_id: int | None
+    challenge_id: int | None
     analysis_type: AnalysisType
     content: str
     created_at: datetime

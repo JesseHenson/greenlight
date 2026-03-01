@@ -3,38 +3,38 @@ from sqlmodel import Session, select
 
 from app.database import engine
 from app.models.analysis import Analysis, AnalysisType
-from app.models.idea import BrainstormIdea
-from app.models.problem import Problem
-from app.models.session import BrainstormSession
+from app.models.idea import Idea
+from app.models.problem import Challenge
+from app.models.session import GreenlightSession
 
-mcp = FastMCP("CommonGround")
+mcp = FastMCP("Greenlight")
 
 
 @mcp.tool()
-def get_problem_context(problem_id: int) -> dict:
-    """Get full details about a co-parenting problem."""
+def get_challenge_context(challenge_id: int) -> dict:
+    """Get full details about a brainstorming challenge."""
     with Session(engine) as session:
-        problem = session.get(Problem, problem_id)
-        if not problem:
-            return {"error": "Problem not found"}
-        bs = session.exec(
-            select(BrainstormSession).where(BrainstormSession.problem_id == problem_id)
+        challenge = session.get(Challenge, challenge_id)
+        if not challenge:
+            return {"error": "Challenge not found"}
+        gs = session.exec(
+            select(GreenlightSession).where(GreenlightSession.challenge_id == challenge_id)
         ).first()
         return {
-            "id": problem.id,
-            "title": problem.title,
-            "description": problem.description,
-            "status": problem.status,
-            "session_status": bs.status if bs else None,
+            "id": challenge.id,
+            "title": challenge.title,
+            "description": challenge.description,
+            "status": challenge.status,
+            "session_status": gs.status if gs else None,
         }
 
 
 @mcp.tool()
-def get_all_ideas(problem_id: int) -> list[dict]:
-    """Get all brainstorm ideas for a problem."""
+def get_all_ideas(challenge_id: int) -> list[dict]:
+    """Get all ideas for a challenge."""
     with Session(engine) as session:
         ideas = session.exec(
-            select(BrainstormIdea).where(BrainstormIdea.problem_id == problem_id)
+            select(Idea).where(Idea.challenge_id == challenge_id)
         ).all()
         return [
             {
@@ -48,35 +48,35 @@ def get_all_ideas(problem_id: int) -> list[dict]:
 
 
 @mcp.tool()
-def get_brainstorm_status(problem_id: int) -> dict:
-    """Get the current brainstorm session status."""
+def get_session_status(challenge_id: int) -> dict:
+    """Get the current greenlight session status."""
     with Session(engine) as session:
-        bs = session.exec(
-            select(BrainstormSession).where(BrainstormSession.problem_id == problem_id)
+        gs = session.exec(
+            select(GreenlightSession).where(GreenlightSession.challenge_id == challenge_id)
         ).first()
-        if not bs:
+        if not gs:
             return {"error": "No session found"}
         ideas = session.exec(
-            select(BrainstormIdea).where(BrainstormIdea.problem_id == problem_id)
+            select(Idea).where(Idea.challenge_id == challenge_id)
         ).all()
         return {
-            "status": bs.status,
+            "status": gs.status,
             "idea_count": len(ideas),
-            "approved_at": str(bs.approved_at) if bs.approved_at else None,
+            "approved_at": str(gs.approved_at) if gs.approved_at else None,
         }
 
 
 @mcp.tool()
 def submit_analysis(idea_id: int, analysis_type: str, content: str) -> dict:
-    """Submit an analysis for a brainstorm idea. Type must be: pros_cons, feasibility, or fairness."""
-    if analysis_type not in ["pros_cons", "feasibility", "fairness"]:
+    """Submit an analysis for an idea. Type must be: pros_cons, feasibility, or impact."""
+    if analysis_type not in ["pros_cons", "feasibility", "impact"]:
         return {"error": "Invalid analysis type"}
     with Session(engine) as session:
-        idea = session.get(BrainstormIdea, idea_id)
+        idea = session.get(Idea, idea_id)
         if not idea:
             return {"error": "Idea not found"}
         analysis = Analysis(
-            brainstorm_idea_id=idea_id,
+            idea_id=idea_id,
             analysis_type=AnalysisType(analysis_type),
             content=content,
         )

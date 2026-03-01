@@ -1,15 +1,15 @@
-def test_create_and_list_comments(client_a, client_b, group_with_parents):
-    problem = client_a.post("/api/problems", json={
+def test_create_and_list_comments(client_a, client_b, team_with_members):
+    challenge = client_a.post("/api/challenges", json={
         "title": "Test",
         "description": "Test",
-        "group_id": group_with_parents.id,
+        "group_id": team_with_members.id,
     }).json()
 
-    idea = client_a.post(f"/api/problems/{problem['id']}/ideas", json={
+    idea = client_a.post(f"/api/challenges/{challenge['id']}/ideas", json={
         "content": "An idea",
     }).json()
 
-    # Both parents comment
+    # Both teammates comment
     resp_a = client_a.post(f"/api/ideas/{idea['id']}/comments", json={
         "content": "I like this idea",
     })
@@ -30,13 +30,13 @@ def test_create_and_list_comments(client_a, client_b, group_with_parents):
 
 
 def test_non_collaborator_cannot_comment(client_a, client_b):
-    """Parent B (not a collaborator) should not be able to comment."""
-    problem = client_a.post("/api/problems", json={
+    """User B (not a collaborator) should not be able to comment."""
+    challenge = client_a.post("/api/challenges", json={
         "title": "Private",
         "description": "Only A",
     }).json()
 
-    idea = client_a.post(f"/api/problems/{problem['id']}/ideas", json={
+    idea = client_a.post(f"/api/challenges/{challenge['id']}/ideas", json={
         "content": "Private idea",
     }).json()
 

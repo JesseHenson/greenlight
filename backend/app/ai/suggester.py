@@ -3,19 +3,19 @@ import json
 from app.ai.client import anthropic_client
 
 
-SUGGEST_PROMPT = """You are a creative co-parenting advisor helping two parents brainstorm solutions.
+SUGGEST_PROMPT = """You are a creative brainstorming advisor helping a team generate breakthrough ideas.
 
-Problem: {title}
+Challenge: {title}
 Description: {description}
 
 Existing ideas already suggested:
 {existing_ideas}
 
 Generate 3 NEW creative ideas that haven't been suggested yet. Focus on:
-- Solutions that benefit the children first
-- Fairness to both parents
-- Practical and implementable approaches
-- Creative compromises
+- Unexpected connections and lateral thinking
+- "What if" scenarios that push boundaries
+- Building on and combining existing ideas in surprising ways
+- Bold, unconventional approaches
 
 Respond with ONLY valid JSON (no markdown, no code blocks):
 [
@@ -25,7 +25,7 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
 ]"""
 
 
-async def suggest_ideas(problem, existing_idea_contents: list[str]) -> list[dict]:
+async def suggest_ideas(challenge, existing_idea_contents: list[str]) -> list[dict]:
     existing = "\n".join(f"- {c}" for c in existing_idea_contents) or "None yet"
 
     response = await anthropic_client.messages.create(
@@ -35,8 +35,8 @@ async def suggest_ideas(problem, existing_idea_contents: list[str]) -> list[dict
             {
                 "role": "user",
                 "content": SUGGEST_PROMPT.format(
-                    title=problem.title,
-                    description=problem.description,
+                    title=challenge.title,
+                    description=challenge.description,
                     existing_ideas=existing,
                 ),
             }

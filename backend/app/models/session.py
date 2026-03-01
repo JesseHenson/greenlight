@@ -5,23 +5,24 @@ from sqlmodel import Field, SQLModel
 
 
 class SessionStatus(str, Enum):
-    brainstorming = "brainstorming"
+    ideate = "ideate"
+    build = "build"
     approved_for_analysis = "approved_for_analysis"
     analysis_in_progress = "analysis_in_progress"
     analysis_complete = "analysis_complete"
 
 
-class BrainstormSession(SQLModel, table=True):
+class GreenlightSession(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    problem_id: int = Field(foreign_key="problem.id", unique=True)
-    status: SessionStatus = Field(default=SessionStatus.brainstorming)
+    challenge_id: int = Field(foreign_key="challenge.id", unique=True)
+    status: SessionStatus = Field(default=SessionStatus.ideate)
     approved_at: datetime | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class SessionRead(SQLModel):
     id: int
-    problem_id: int
+    challenge_id: int
     status: SessionStatus
     approved_at: datetime | None
     created_at: datetime

@@ -4,18 +4,18 @@ from sqlmodel import select
 from app.database import SessionDep
 from app.dependencies import CurrentUser
 from app.models.comment import Comment, CommentCreate, CommentRead
-from app.models.idea import BrainstormIdea
-from app.models.problem import ProblemCollaborator
+from app.models.idea import Idea
+from app.models.problem import ChallengeCollaborator
 from app.models.user import User
 
 router = APIRouter(tags=["comments"])
 
 
-def _check_collaborator(session, problem_id: int, user_id: int):
+def _check_collaborator(session, challenge_id: int, user_id: int):
     collab = session.exec(
-        select(ProblemCollaborator).where(
-            ProblemCollaborator.problem_id == problem_id,
-            ProblemCollaborator.user_id == user_id,
+        select(ChallengeCollaborator).where(
+            ChallengeCollaborator.challenge_id == challenge_id,
+            ChallengeCollaborator.user_id == user_id,
         )
     ).first()
     if not collab:
@@ -38,10 +38,10 @@ def _enrich_comment(comment: Comment, session) -> CommentRead:
 
 @router.get("/api/ideas/{idea_id}/comments", response_model=list[CommentRead])
 def list_comments(idea_id: int, session: SessionDep, current_user: CurrentUser):
-    idea = session.get(BrainstormIdea, idea_id)
+    idea = session.get(Idea, idea_id)
     if not idea:
         raise HTTPException(status_code=404, detail="Idea not found")
-    _check_collaborator(session, idea.problem_id, current_user.id)
+    _check_collaborator(session, idea.challenge_id, current_user.id)
 
     comments = session.exec(
         select(Comment)
@@ -58,10 +58,10 @@ def create_comment(
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    idea = session.get(BrainstormIdea, idea_id)
+    idea = session.get(Idea, idea_id)
     if not idea:
         raise HTTPException(status_code=404, detail="Idea not found")
-    _check_collaborator(session, idea.problem_id, current_user.id)
+    _check_collaborator(session, idea.challenge_id, current_user.id)
 
     comment = Comment(
         idea_id=idea_id,

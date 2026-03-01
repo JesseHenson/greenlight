@@ -5,7 +5,7 @@ from sqlmodel import Field, SQLModel
 
 class Comment(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    idea_id: int = Field(foreign_key="brainstormidea.id", index=True)
+    idea_id: int = Field(foreign_key="idea.id", index=True)
     content: str
     created_by: int = Field(foreign_key="user.id")
     tone_flag: bool = Field(default=False)

@@ -9,9 +9,9 @@ class IdeaStatus(str, Enum):
     submitted = "submitted"
 
 
-class BrainstormIdea(SQLModel, table=True):
+class Idea(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    problem_id: int = Field(foreign_key="problem.id")
+    challenge_id: int = Field(foreign_key="challenge.id")
     content: str
     created_by: int = Field(foreign_key="user.id")
     status: IdeaStatus = Field(default=IdeaStatus.submitted)
@@ -26,7 +26,7 @@ class IdeaCreate(SQLModel):
 
 class IdeaRead(SQLModel):
     id: int
-    problem_id: int
+    challenge_id: int
     content: str
     created_by: int
     creator_name: str | None = None

@@ -6,23 +6,23 @@ from sqlmodel import select
 from app.database import SessionDep
 from app.dependencies import CurrentUser
 from app.models.draft import IdeaDraft, IdeaDraftRead, IdeaDraftUpdate
-from app.models.idea import BrainstormIdea
-from app.models.problem import ProblemCollaborator
-from app.models.session import BrainstormSession, SessionStatus
+from app.models.idea import Idea
+from app.models.problem import ChallengeCollaborator
+from app.models.session import GreenlightSession, SessionStatus
 
 router = APIRouter(tags=["drafts"])
 
 
 @router.get("/api/ideas/{idea_id}/draft", response_model=IdeaDraftRead | None)
 def get_draft(idea_id: int, session: SessionDep, current_user: CurrentUser):
-    idea = session.get(BrainstormIdea, idea_id)
+    idea = session.get(Idea, idea_id)
     if not idea:
         raise HTTPException(status_code=404, detail="Idea not found")
 
     collab = session.exec(
-        select(ProblemCollaborator).where(
-            ProblemCollaborator.problem_id == idea.problem_id,
-            ProblemCollaborator.user_id == current_user.id,
+        select(ChallengeCollaborator).where(
+            ChallengeCollaborator.challenge_id == idea.challenge_id,
+            ChallengeCollaborator.user_id == current_user.id,
         )
     ).first()
     if not collab:
@@ -45,7 +45,7 @@ def get_draft(idea_id: int, session: SessionDep, current_user: CurrentUser):
         notes=draft.notes,
         want_pros_cons=draft.want_pros_cons,
         want_feasibility=draft.want_feasibility,
-        want_fairness=draft.want_fairness,
+        want_impact=draft.want_impact,
         updated_at=draft.updated_at,
     )
 
@@ -57,28 +57,28 @@ def upsert_draft(
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    idea = session.get(BrainstormIdea, idea_id)
+    idea = session.get(Idea, idea_id)
     if not idea:
         raise HTTPException(status_code=404, detail="Idea not found")
 
     collab = session.exec(
-        select(ProblemCollaborator).where(
-            ProblemCollaborator.problem_id == idea.problem_id,
-            ProblemCollaborator.user_id == current_user.id,
+        select(ChallengeCollaborator).where(
+            ChallengeCollaborator.challenge_id == idea.challenge_id,
+            ChallengeCollaborator.user_id == current_user.id,
         )
     ).first()
     if not collab:
         raise HTTPException(status_code=403, detail="Not a collaborator")
 
-    # Only allow drafts during brainstorming
-    bs = session.exec(
-        select(BrainstormSession).where(
-            BrainstormSession.problem_id == idea.problem_id
+    # Allow drafts during ideate and build phases
+    gs = session.exec(
+        select(GreenlightSession).where(
+            GreenlightSession.challenge_id == idea.challenge_id
         )
     ).first()
-    if bs and bs.status != SessionStatus.brainstorming:
+    if gs and gs.status not in (SessionStatus.ideate, SessionStatus.build):
         raise HTTPException(
-            status_code=400, detail="Can only edit drafts during brainstorming"
+            status_code=400, detail="Can only edit drafts during ideation and building"
         )
 
     draft = session.exec(
@@ -95,8 +95,8 @@ def upsert_draft(
             draft.want_pros_cons = data.want_pros_cons
         if data.want_feasibility is not None:
             draft.want_feasibility = data.want_feasibility
-        if data.want_fairness is not None:
-            draft.want_fairness = data.want_fairness
+        if data.want_impact is not None:
+            draft.want_impact = data.want_impact
         draft.updated_at = datetime.utcnow()
     else:
         draft = IdeaDraft(
@@ -105,7 +105,7 @@ def upsert_draft(
             notes=data.notes or "",
             want_pros_cons=data.want_pros_cons or False,
             want_feasibility=data.want_feasibility or False,
-            want_fairness=data.want_fairness or False,
+            want_impact=data.want_impact or False,
         )
 
     session.add(draft)
@@ -119,6 +119,6 @@ def upsert_draft(
         notes=draft.notes,
         want_pros_cons=draft.want_pros_cons,
         want_feasibility=draft.want_feasibility,
-        want_fairness=draft.want_fairness,
+        want_impact=draft.want_impact,
         updated_at=draft.updated_at,
     )
