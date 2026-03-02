@@ -3,13 +3,34 @@ import api from '../api/client';
 import type { Analysis, Idea } from '../types';
 import CommentThread from './CommentThread';
 
+interface ProsConsData {
+  pros?: string[];
+  cons?: string[];
+  stakeholder_impact?: string;
+}
+
+interface FeasibilityData {
+  score: number;
+  logistics?: string;
+  cost?: string;
+  time?: string;
+  complexity?: string;
+}
+
+interface ImpactData {
+  score: number;
+  team_impact?: string;
+  user_impact?: string;
+  balance_assessment?: string;
+}
+
 interface Props {
   idea: Idea;
 }
 
-function parseJSON(str: string): any {
+function parseJSON<T>(str: string): T | null {
   try {
-    return JSON.parse(str);
+    return JSON.parse(str) as T;
   } catch {
     return null;
   }
@@ -47,9 +68,9 @@ export default function AnalysisPanel({ idea }: Props) {
   const feasibility = analyses.find((a) => a.analysis_type === 'feasibility');
   const impact = analyses.find((a) => a.analysis_type === 'impact');
 
-  const prosConsData = prosCons ? parseJSON(prosCons.content) : null;
-  const feasibilityData = feasibility ? parseJSON(feasibility.content) : null;
-  const impactData = impact ? parseJSON(impact.content) : null;
+  const prosConsData = prosCons ? parseJSON<ProsConsData>(prosCons.content) : null;
+  const feasibilityData = feasibility ? parseJSON<FeasibilityData>(feasibility.content) : null;
+  const impactData = impact ? parseJSON<ImpactData>(impact.content) : null;
 
   return (
     <div className="bg-white border border-slate-200/60 rounded-lg shadow-sm overflow-hidden">

@@ -1,9 +1,8 @@
-import os
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from app.config import settings
 from app.database import get_session
 from app.dependencies import CurrentUser
 from app.models.user import User, UserRead
@@ -28,7 +27,7 @@ class DevLoginResponse(BaseModel):
 
 @router.post("/dev-login", response_model=DevLoginResponse)
 def dev_login(body: DevLoginRequest, session: Session = Depends(get_session)):
-    if os.environ.get("RENDER") or os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("PRODUCTION"):
+    if settings.production:
         raise HTTPException(status_code=404, detail="Not found")
 
     user = session.exec(select(User).where(User.email == body.email)).first()

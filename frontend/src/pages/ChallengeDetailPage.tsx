@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { isAxiosError } from 'axios';
 import api from '../api/client';
 import type { Challenge, Idea, GreenlightSession, User } from '../types';
 import IdeaCard from '../components/IdeaCard';
@@ -21,7 +22,7 @@ export default function ChallengeDetailPage({ user }: Props) {
   const [collabEmail, setCollabEmail] = useState('');
   const [collabMsg, setCollabMsg] = useState('');
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     const [cRes, iRes, sRes] = await Promise.all([
       api.get(`/challenges/${id}`),
       api.get(`/challenges/${id}/ideas`),
@@ -30,11 +31,11 @@ export default function ChallengeDetailPage({ user }: Props) {
     setChallenge(cRes.data);
     setIdeas(iRes.data);
     setSession(sRes.data);
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchAll();
-  }, [id]);
+  }, [fetchAll]);
 
   const handleApprove = async () => {
     setApproving(true);
@@ -66,8 +67,8 @@ export default function ChallengeDetailPage({ user }: Props) {
       const res = await api.post(`/challenges/${id}/collaborators`, { email: collabEmail });
       setCollabMsg(res.data.message);
       setCollabEmail('');
-    } catch (err: any) {
-      setCollabMsg(err.response?.data?.detail || 'Failed');
+    } catch (err: unknown) {
+      setCollabMsg(isAxiosError(err) && err.response?.data?.detail || 'Failed');
     }
   };
 

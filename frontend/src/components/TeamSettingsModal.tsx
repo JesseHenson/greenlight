@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { isAxiosError } from 'axios';
 import api from '../api/client';
 import type { Team } from '../types';
 
@@ -23,18 +24,18 @@ export default function TeamSettingsModal({ team, onClose, onTeamUpdated }: Prop
   const [error, setError] = useState('');
   const [editingName, setEditingName] = useState(false);
 
-  useEffect(() => {
-    fetchPendingInvites();
-  }, []);
-
-  const fetchPendingInvites = async () => {
+  const fetchPendingInvites = useCallback(async () => {
     try {
       const res = await api.get(`/teams/${team.id}/pending-invites`);
       setPendingInvites(res.data);
     } catch {
       // ignore
     }
-  };
+  }, [team.id]);
+
+  useEffect(() => {
+    fetchPendingInvites();
+  }, [fetchPendingInvites]);
 
   const handleUpdateName = async () => {
     setLoading(true);
@@ -43,8 +44,8 @@ export default function TeamSettingsModal({ team, onClose, onTeamUpdated }: Prop
       await api.patch(`/teams/${team.id}`, { name: teamName });
       onTeamUpdated({ ...team, name: teamName });
       setEditingName(false);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update');
+    } catch (err: unknown) {
+      setError(isAxiosError(err) && err.response?.data?.detail || 'Failed to update');
     } finally {
       setLoading(false);
     }
@@ -65,8 +66,8 @@ export default function TeamSettingsModal({ team, onClose, onTeamUpdated }: Prop
       } else {
         fetchPendingInvites();
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to invite');
+    } catch (err: unknown) {
+      setError(isAxiosError(err) && err.response?.data?.detail || 'Failed to invite');
     } finally {
       setLoading(false);
     }

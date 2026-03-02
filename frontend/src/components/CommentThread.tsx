@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import api from '../api/client';
 import type { Comment, CreativityCheckResult } from '../types';
 
@@ -14,13 +14,13 @@ export default function CommentThread({ ideaId }: Props) {
   const [pendingText, setPendingText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const fetchComments = () => {
+  const fetchComments = useCallback(() => {
     api.get(`/ideas/${ideaId}/comments`).then((res) => setComments(res.data)).catch(() => {});
-  };
+  }, [ideaId]);
 
   useEffect(() => {
     fetchComments();
-  }, [ideaId]);
+  }, [fetchComments]);
 
   useEffect(() => {
     if (scrollRef.current) {

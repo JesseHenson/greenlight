@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isAxiosError } from 'axios';
 import api from '../api/client';
 import type { CreativityCheckResult } from '../types';
 
@@ -35,9 +36,9 @@ export default function AddIdeaForm({ challengeId, sessionStatus, onIdeaAdded }:
       setContent('');
       setCheckResult(null);
       onIdeaAdded();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // If AI check fails, submit without check
-      if (err.response?.status !== 400) {
+      if (!isAxiosError(err) || err.response?.status !== 400) {
         try {
           await api.post(`/challenges/${challengeId}/ideas`, { content: text });
           setContent('');

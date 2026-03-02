@@ -51,11 +51,15 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v2
 
+      - uses: dopplerhq/cli-action@v3
+        with:
+          token: ${{ secrets.DOPPLER_TOKEN }}
+
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy coparent \
+          doppler run -- sh -c 'gcloud run deploy greenlight \
             --region=us-central1 \
             --source=. \
             --allow-unauthenticated \
-            --set-env-vars="ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }},SECRET_KEY=${{ secrets.SECRET_KEY }},CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }},CLERK_PUBLISHABLE_KEY=${{ secrets.CLERK_PUBLISHABLE_KEY }},DATABASE_URL=${{ secrets.DATABASE_URL }}" \
-            --set-build-env-vars="VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.CLERK_PUBLISHABLE_KEY }}"
+            --set-env-vars="ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY,SECRET_KEY=$SECRET_KEY,CLERK_SECRET_KEY=$CLERK_SECRET_KEY,CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY,DATABASE_URL=$DATABASE_URL,CORS_ORIGINS=$CORS_ORIGINS,PRODUCTION=$PRODUCTION,SENTRY_DSN=$SENTRY_DSN,APP_URL=$APP_URL" \
+            --set-build-env-vars="VITE_CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY,VITE_SENTRY_DSN=$VITE_SENTRY_DSN"'

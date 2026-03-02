@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isAxiosError } from 'axios';
 import api from '../api/client';
 
 interface Props {
@@ -24,8 +25,8 @@ export default function CreateChallengeModal({ groupId, onCreated, onClose }: Pr
       }
       await api.post('/challenges', payload);
       onCreated();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create challenge');
+    } catch (err: unknown) {
+      setError(isAxiosError(err) && err.response?.data?.detail || 'Failed to create challenge');
     } finally {
       setLoading(false);
     }

@@ -4,7 +4,10 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-ENV VITE_CLERK_PUBLISHABLE_KEY=pk_test_ZW5vdWdoLW1hbGFtdXRlLTM4LmNsZXJrLmFjY291bnRzLmRldiQ
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ARG VITE_SENTRY_DSN
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 RUN npm run build
 
 # Stage 2: Python backend + serve built frontend

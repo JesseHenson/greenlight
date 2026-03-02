@@ -7,6 +7,8 @@ import {
   SignUpButton,
   useAuth,
 } from '@clerk/clerk-react';
+import * as Sentry from '@sentry/react';
+import { isAxiosError } from 'axios';
 import { setTokenGetter } from './api/client';
 import api from './api/client';
 import type { User } from './types';
@@ -45,9 +47,9 @@ function ClerkAuthenticatedApp() {
     try {
       const res = await api.get('/auth/me');
       setUser(res.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load user profile:', err);
-      setError(err.response?.data?.detail || 'Failed to load profile');
+      setError(isAxiosError(err) && err.response?.data?.detail || 'Failed to load profile');
       setUser(null);
     } finally {
       setLoading(false);
@@ -151,14 +153,15 @@ function SignInPage({ onDevLogin }: { onDevLogin?: (email: string) => void }) {
 
 function App() {
   const [devUser, setDevUser] = useState<User | null>(null);
-  const [devLoading, setDevLoading] = useState(false);
+  const [devLoading, setDevLoading] = useState(
+    () => IS_DEV && !!sessionStorage.getItem('dev_token')
+  );
 
   // Check for existing dev session on mount
   useEffect(() => {
     const token = sessionStorage.getItem('dev_token');
     if (token && IS_DEV) {
       setTokenGetter(async () => token);
-      setDevLoading(true);
       api.get('/auth/me')
         .then((res) => setDevUser(res.data))
         .catch(() => { sessionStorage.removeItem('dev_token'); })
@@ -195,21 +198,25 @@ function App() {
   // Dev user is logged in — skip Clerk entirely
   if (devUser) {
     return (
-      <BrowserRouter>
-        <AuthenticatedApp user={devUser} onSignOut={handleDevSignOut} />
-      </BrowserRouter>
+      <Sentry.ErrorBoundary fallback={<p>Something went wrong</p>}>
+        <BrowserRouter>
+          <AuthenticatedApp user={devUser} onSignOut={handleDevSignOut} />
+        </BrowserRouter>
+      </Sentry.ErrorBoundary>
     );
   }
 
   return (
-    <BrowserRouter>
-      <SignedIn>
-        <ClerkAuthenticatedApp />
-      </SignedIn>
-      <SignedOut>
-        <SignInPage onDevLogin={IS_DEV ? handleDevLogin : undefined} />
-      </SignedOut>
-    </BrowserRouter>
+    <Sentry.ErrorBoundary fallback={<p>Something went wrong</p>}>
+      <BrowserRouter>
+        <SignedIn>
+          <ClerkAuthenticatedApp />
+        </SignedIn>
+        <SignedOut>
+          <SignInPage onDevLogin={IS_DEV ? handleDevLogin : undefined} />
+        </SignedOut>
+      </BrowserRouter>
+    </Sentry.ErrorBoundary>
   );
 }
 

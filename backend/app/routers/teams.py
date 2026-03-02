@@ -1,9 +1,8 @@
-import os
-
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from sqlmodel import select
 
+from app.config import settings
 from app.database import SessionDep
 from app.dependencies import CurrentUser
 from app.models.group import Team, TeamMember, TeamRead, GroupRole, PendingTeamInvite
@@ -221,10 +220,7 @@ def invite_to_team(
     if existing_invite:
         raise HTTPException(status_code=400, detail="An invitation has already been sent to this email")
 
-    redirect_url = os.environ.get(
-        "APP_URL",
-        "https://greenlight.app",
-    )
+    redirect_url = settings.app_url
     send_clerk_invitation(data.email, redirect_url)
 
     session.add(PendingTeamInvite(

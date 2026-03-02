@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isAxiosError } from 'axios';
 import api from '../api/client';
 import type { Team } from '../types';
 
@@ -23,8 +24,8 @@ export default function TeamSetup({ onTeamCreated }: Props) {
       const res = await api.post('/teams', { name: teamName || 'My Team' });
       setCreatedTeam(res.data);
       setStep('invite');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create team');
+    } catch (err: unknown) {
+      setError(isAxiosError(err) && err.response?.data?.detail || 'Failed to create team');
     } finally {
       setLoading(false);
     }
@@ -44,8 +45,8 @@ export default function TeamSetup({ onTeamCreated }: Props) {
       } else {
         setStep('sent');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to invite');
+    } catch (err: unknown) {
+      setError(isAxiosError(err) && err.response?.data?.detail || 'Failed to invite');
     } finally {
       setLoading(false);
     }

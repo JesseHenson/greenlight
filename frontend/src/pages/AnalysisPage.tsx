@@ -1,13 +1,25 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/client';
 import type { Challenge, Idea, GreenlightSession, Analysis } from '../types';
 import AnalysisPanel from '../components/AnalysisPanel';
 import AnalysisProgress from '../components/AnalysisProgress';
 
-function parseJSON(str: string): any {
+interface Recommendation {
+  idea: string;
+  why: string;
+}
+
+interface SummaryData {
+  themes?: string[];
+  top_recommendations?: Recommendation[];
+  trade_offs?: string[];
+  next_steps?: string[];
+}
+
+function parseJSON<T>(str: string): T | null {
   try {
-    return JSON.parse(str);
+    return JSON.parse(str) as T;
   } catch {
     return null;
   }
@@ -20,32 +32,34 @@ export default function AnalysisPage() {
   const [session, setSession] = useState<GreenlightSession | null>(null);
   const [summary, setSummary] = useState<Analysis | null>(null);
 
-  const fetchAll = useCallback(async () => {
-    const [cRes, iRes, sRes] = await Promise.all([
-      api.get(`/challenges/${id}`),
-      api.get(`/challenges/${id}/ideas`),
-      api.get(`/challenges/${id}/session`),
-    ]);
-    setChallenge(cRes.data);
-    setIdeas(iRes.data);
-    setSession(sRes.data);
-
-    if (
-      sRes.data.status === 'analysis_complete' ||
-      sRes.data.status === 'analysis_in_progress'
-    ) {
-      try {
-        const sumRes = await api.get(`/challenges/${id}/analysis-summary`);
-        setSummary(sumRes.data);
-      } catch {
-        // ignore
-      }
-    }
-  }, [id]);
+  const [reloadKey, setReloadKey] = useState(0);
+  const reload = () => setReloadKey((k) => k + 1);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    async function load() {
+      const [cRes, iRes, sRes] = await Promise.all([
+        api.get(`/challenges/${id}`),
+        api.get(`/challenges/${id}/ideas`),
+        api.get(`/challenges/${id}/session`),
+      ]);
+      setChallenge(cRes.data);
+      setIdeas(iRes.data);
+      setSession(sRes.data);
+
+      if (
+        sRes.data.status === 'analysis_complete' ||
+        sRes.data.status === 'analysis_in_progress'
+      ) {
+        try {
+          const sumRes = await api.get(`/challenges/${id}/analysis-summary`);
+          setSummary(sumRes.data);
+        } catch {
+          // ignore
+        }
+      }
+    }
+    load();
+  }, [id, reloadKey]);
 
   if (!challenge || !session) {
     return (
@@ -59,7 +73,7 @@ export default function AnalysisPage() {
     session.status === 'analysis_in_progress' ||
     session.status === 'approved_for_analysis';
 
-  const summaryData = summary ? parseJSON(summary.content) : null;
+  const summaryData = summary ? parseJSON<SummaryData>(summary.content) : null;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -74,7 +88,7 @@ export default function AnalysisPage() {
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
         {isInProgress && (
-          <AnalysisProgress challengeId={challenge.id} onComplete={fetchAll} />
+          <AnalysisProgress challengeId={challenge.id} onComplete={reload} />
         )}
 
         {summaryData && (
@@ -103,7 +117,7 @@ export default function AnalysisPage() {
                   Top Recommendations
                 </h3>
                 <div className="space-y-2">
-                  {summaryData.top_recommendations.map((r: any, i: number) => (
+                  {summaryData.top_recommendations.map((r, i) => (
                     <div key={i} className="bg-emerald-50/50 border border-emerald-200/60 p-3 rounded-lg">
                       <p className="font-medium text-emerald-800">{r.idea}</p>
                       <p className="text-sm text-emerald-600 mt-1">{r.why}</p>

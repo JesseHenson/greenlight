@@ -1,5 +1,6 @@
 import asyncio
 
+import sentry_sdk
 from sqlmodel import Session, select
 
 from app.ai.analyzer import analyze_idea
@@ -48,7 +49,7 @@ async def _run_analysis_async(challenge_id: int):
                     session.add(analysis)
                     session.commit()
                 except Exception as e:
-                    print(f"Error analyzing idea {idea.id} ({atype}): {e}")
+                    sentry_sdk.capture_exception(e)
 
         # Generate session summary
         ideas_text_parts = []
@@ -74,7 +75,7 @@ async def _run_analysis_async(challenge_id: int):
             )
             session.add(summary)
         except Exception as e:
-            print(f"Error generating summary: {e}")
+            sentry_sdk.capture_exception(e)
 
         # Mark complete
         gs.status = SessionStatus.analysis_complete
