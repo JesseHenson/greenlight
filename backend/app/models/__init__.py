@@ -7,6 +7,7 @@ from app.models.comment import Comment
 from app.models.approval import SessionApproval
 from app.models.draft import IdeaDraft
 from app.models.group import Team, TeamMember, PendingTeamInvite
+from app.models.waitlist import WaitlistEntry
 
 __all__ = [
     "User",
@@ -21,4 +22,5 @@ __all__ = [
     "Team",
     "TeamMember",
     "PendingTeamInvite",
+    "WaitlistEntry",
 ]
