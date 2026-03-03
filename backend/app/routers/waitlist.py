@@ -19,6 +19,12 @@ def join_waitlist(data: WaitlistCreate, session: SessionDep):
     session.add(entry)
     session.commit()
     session.refresh(entry)
+
+    from app.services.email import send_waitlist_notification
+    send_waitlist_notification(
+        entry.name, entry.email, entry.created_at.strftime("%B %d, %Y at %I:%M %p UTC"),
+    )
+
     return entry
 
 

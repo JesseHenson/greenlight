@@ -64,6 +64,17 @@ def create_idea(
     session.add(idea)
     session.commit()
     session.refresh(idea)
+
+    from app.services.notifications import notify_collaborators
+    from app.models.notification import NotificationType
+    preview = data.content[:80] + ("..." if len(data.content) > 80 else "")
+    notify_collaborators(
+        session, challenge_id, current_user.id,
+        NotificationType.idea_added,
+        f"{current_user.name} added an idea",
+        preview,
+    )
+
     return _enrich_idea(idea, session)
 
 

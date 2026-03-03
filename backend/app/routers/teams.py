@@ -223,6 +223,14 @@ def invite_to_team(
     redirect_url = settings.app_url
     send_clerk_invitation(data.email, redirect_url)
 
+    from app.services.email import send_team_invite_email
+    send_team_invite_email(
+        to_email=data.email,
+        inviter_name=current_user.name,
+        team_name=team.name,
+        app_url=redirect_url,
+    )
+
     session.add(PendingTeamInvite(
         group_id=team_id,
         email=data.email,

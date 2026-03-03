@@ -131,6 +131,16 @@ def approve_session(
     session.add(approval)
     session.commit()
 
+    from app.services.notifications import notify_collaborators
+    from app.models.notification import NotificationType
+    gate_label = "definition" if current_gate == GateType.ideate_to_build else "analysis"
+    notify_collaborators(
+        session, challenge_id, current_user.id,
+        NotificationType.approval_changed,
+        f"{current_user.name} approved",
+        f"Approved moving to the {gate_label} phase",
+    )
+
     # Check if all collaborators have now approved this gate
     total_approvals = len(
         session.exec(

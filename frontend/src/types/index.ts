@@ -114,3 +114,15 @@ export interface Team {
   name: string;
   members: TeamMember[];
 }
+
+export type NotificationType = 'idea_added' | 'comment_added' | 'approval_changed' | 'analysis_complete' | 'team_invite';
+
+export interface Notification {
+  id: number;
+  type: NotificationType;
+  title: string;
+  body: string;
+  challenge_id: number | null;
+  read: boolean;
+  created_at: string;
+}

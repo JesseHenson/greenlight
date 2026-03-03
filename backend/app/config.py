@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     production: bool = False
     app_url: str = "http://localhost:5173"
     sentry_dsn: str = ""
+    resend_api_key: str = ""
+    notify_email: str = ""
 
     model_config = {"env_file": ".env"}
 

@@ -73,4 +73,15 @@ def create_comment(
     session.add(comment)
     session.commit()
     session.refresh(comment)
+
+    from app.services.notifications import notify_collaborators
+    from app.models.notification import NotificationType
+    preview = data.content[:80] + ("..." if len(data.content) > 80 else "")
+    notify_collaborators(
+        session, idea.challenge_id, current_user.id,
+        NotificationType.comment_added,
+        f"{current_user.name} commented",
+        preview,
+    )
+
     return _enrich_comment(comment, session)

@@ -8,8 +8,9 @@ from app.ai.summarizer import summarize_session
 from app.database import engine
 from app.models.analysis import Analysis, AnalysisType
 from app.models.idea import Idea
-from app.models.problem import Challenge
+from app.models.problem import Challenge, ChallengeCollaborator
 from app.models.session import GreenlightSession, SessionStatus
+from app.models.user import User
 
 
 def run_analysis(challenge_id: int):
@@ -81,3 +82,38 @@ async def _run_analysis_async(challenge_id: int):
         gs.status = SessionStatus.analysis_complete
         session.add(gs)
         session.commit()
+
+        # Notify collaborators via email + in-app
+        try:
+            from app.config import settings
+            from app.services.email import send_analysis_complete_email
+            from app.models.notification import Notification, NotificationType
+
+            collabs = session.exec(
+                select(ChallengeCollaborator).where(
+                    ChallengeCollaborator.challenge_id == challenge_id
+                )
+            ).all()
+            for collab in collabs:
+                user = session.get(User, collab.user_id)
+                if user:
+                    # In-app notification
+                    session.add(Notification(
+                        user_id=user.id,
+                        type=NotificationType.analysis_complete,
+                        title="Analysis complete",
+                        body=f"AI analysis for \"{challenge.title}\" is ready to review",
+                        challenge_id=challenge_id,
+                    ))
+                    # Email notification
+                    if user.email:
+                        send_analysis_complete_email(
+                            to_email=user.email,
+                            user_name=user.name,
+                            challenge_title=challenge.title,
+                            app_url=settings.app_url,
+                            challenge_id=challenge_id,
+                        )
+            session.commit()
+        except Exception as e:
+            sentry_sdk.capture_exception(e)

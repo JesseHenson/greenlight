@@ -7,6 +7,7 @@ import CreateChallengeModal from '../components/CreateChallengeModal';
 import TeamSetup from '../components/TeamSetup';
 import TeamSettingsModal from '../components/TeamSettingsModal';
 import WelcomePage from './WelcomePage';
+import NotificationBell from '../components/NotificationBell';
 
 interface Props {
   user: User;
@@ -92,6 +93,7 @@ export default function DashboardPage({ user, onDevSignOut }: Props) {
                 </div>
               </button>
             )}
+            <NotificationBell />
             <span className="hidden sm:inline text-sm text-slate-300">{user.name}</span>
             {onDevSignOut ? (
               <button
