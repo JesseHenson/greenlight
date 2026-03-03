@@ -83,6 +83,10 @@ async def _run_analysis_async(challenge_id: int):
         session.add(gs)
         session.commit()
 
+        # Broadcast real-time update
+        from app.services.sse import broadcast
+        broadcast(challenge_id, "analysis_complete")
+
         # Notify collaborators via email + in-app
         try:
             from app.config import settings

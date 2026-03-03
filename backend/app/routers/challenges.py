@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
 from app.database import SessionDep
@@ -180,6 +181,30 @@ def update_challenge(
         created_at=challenge.created_at,
         idea_count=idea_count,
         session_status=gs.status if gs else None,
+    )
+
+
+@router.get("/{challenge_id}/events")
+async def challenge_events(challenge_id: int, session: SessionDep, current_user: CurrentUser):
+    """SSE stream of real-time updates for a challenge."""
+    collab = session.exec(
+        select(ChallengeCollaborator).where(
+            ChallengeCollaborator.challenge_id == challenge_id,
+            ChallengeCollaborator.user_id == current_user.id,
+        )
+    ).first()
+    if not collab:
+        raise HTTPException(status_code=403, detail="Not a collaborator")
+
+    from app.services.sse import subscribe
+    return StreamingResponse(
+        subscribe(challenge_id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

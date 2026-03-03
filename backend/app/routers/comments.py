@@ -84,4 +84,7 @@ def create_comment(
         preview,
     )
 
+    from app.services.sse import broadcast
+    broadcast(idea.challenge_id, "comment_added", {"idea_id": idea_id})
+
     return _enrich_comment(comment, session)

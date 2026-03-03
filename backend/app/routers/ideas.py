@@ -75,6 +75,9 @@ def create_idea(
         preview,
     )
 
+    from app.services.sse import broadcast
+    broadcast(challenge_id, "idea_added", {"idea_id": idea.id})
+
     return _enrich_idea(idea, session)
 
 
@@ -105,6 +108,10 @@ def update_idea(
     session.add(idea)
     session.commit()
     session.refresh(idea)
+
+    from app.services.sse import broadcast
+    broadcast(idea.challenge_id, "idea_updated", {"idea_id": idea.id})
+
     return _enrich_idea(idea, session)
 
 
@@ -124,6 +131,11 @@ def delete_idea(idea_id: int, session: SessionDep, current_user: CurrentUser):
     ).all():
         session.delete(draft)
 
+    challenge_id = idea.challenge_id
     session.delete(idea)
     session.commit()
+
+    from app.services.sse import broadcast
+    broadcast(challenge_id, "idea_deleted", {"idea_id": idea_id})
+
     return {"message": "Idea deleted"}

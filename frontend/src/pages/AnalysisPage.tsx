@@ -4,6 +4,7 @@ import api from '../api/client';
 import type { Challenge, Idea, GreenlightSession, Analysis } from '../types';
 import AnalysisPanel from '../components/AnalysisPanel';
 import AnalysisProgress from '../components/AnalysisProgress';
+import { useChallengeEvents } from '../hooks/useChallengeEvents';
 
 interface Recommendation {
   idea: string;
@@ -34,6 +35,13 @@ export default function AnalysisPage() {
 
   const [reloadKey, setReloadKey] = useState(0);
   const reload = () => setReloadKey((k) => k + 1);
+
+  // Auto-refresh when analysis completes via SSE
+  useChallengeEvents(id ? Number(id) : undefined, (event) => {
+    if (event.type === 'analysis_complete' || event.type === 'session_updated') {
+      reload();
+    }
+  });
 
   useEffect(() => {
     async function load() {

@@ -7,6 +7,7 @@ import IdeaCard from '../components/IdeaCard';
 import AddIdeaForm from '../components/AddIdeaForm';
 import SessionStatusBar from '../components/SessionStatusBar';
 import AISuggestButton from '../components/AISuggestButton';
+import { useChallengeEvents } from '../hooks/useChallengeEvents';
 
 interface Props {
   user: User;
@@ -36,6 +37,16 @@ export default function ChallengeDetailPage({ user }: Props) {
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
+  // Real-time updates via SSE
+  useChallengeEvents(id ? Number(id) : undefined, (event) => {
+    if (event.type === 'analysis_complete') {
+      navigate(`/challenges/${id}/analysis`);
+    } else {
+      // Re-fetch data for any other event (ideas, comments, approvals)
+      fetchAll();
+    }
+  });
 
   const handleApprove = async () => {
     setApproving(true);

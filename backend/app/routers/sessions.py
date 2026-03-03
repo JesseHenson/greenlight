@@ -175,4 +175,7 @@ def approve_session(
             from app.services.analysis_runner import run_analysis
             background_tasks.add_task(run_analysis, challenge_id)
 
+    from app.services.sse import broadcast
+    broadcast(challenge_id, "session_updated", {"status": gs.status.value})
+
     return _enrich_session(gs, session)
