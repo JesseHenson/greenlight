@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import create_db_and_tables
-from app.routers import auth, challenges, ideas, sessions, ai, analysis, comments, drafts, teams
+from app.routers import auth, challenges, ideas, sessions, ai, analysis, comments, drafts, teams, waitlist
 
 if settings.sentry_dsn:
     sentry_sdk.init(
@@ -45,6 +45,7 @@ app.include_router(analysis.router)
 app.include_router(comments.router)
 app.include_router(drafts.router)
 app.include_router(teams.router)
+app.include_router(waitlist.router)
 
 
 @app.get("/api/health")
